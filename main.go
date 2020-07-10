@@ -2,24 +2,24 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"html/template"
 	"os"
 	"os/exec"
 )
 
-const layoutPath = "layout/layout.html"
-const tmpPath = "tmp"
-const pdfPath = "pdf"
+var layoutPath = flag.String("template", "layout/layout.html", "HTML template used to generate pdf document")
+var tmpPath = flag.String("temp", "tmp", "Temporary folder to keep generated HTML docs")
+var pdfPath = flag.String("out", "pdf", "Output folder")
+var csvFilePath = flag.String("in", "input.csv", "Input CSV file path")
+
 const fileIDFieldName = "FirstName"
 
 func main() {
-	filename := getCsvFilename()
-	if filename == "" {
-		return
-	}
+	flag.Parse()
 
-	headers, data := getCsvData(filename)
+	headers, data := getCsvData(*csvFilePath)
 
 	fmt.Printf("Total number of records read : %d", len(data))
 
@@ -33,15 +33,6 @@ func main() {
 		filename := generateHTML(dataMap, fileID)
 		generatePdf(filename, fileID)
 	}
-}
-
-func getCsvFilename() string {
-	fmt.Println(os.Args)
-	if len(os.Args) < 2 {
-		fmt.Println("Please provide input file in command line argument")
-		return ""
-	}
-	return os.Args[1]
 }
 
 func getCsvData(filename string) ([]string, [][]string) {
@@ -67,12 +58,12 @@ func getCsvData(filename string) ([]string, [][]string) {
 }
 
 func generateHTML(data map[string]string, fileID string) string {
-	tmpl, err := template.ParseFiles(layoutPath)
+	tmpl, err := template.ParseFiles(*layoutPath)
 	if err != nil {
 		return ""
 	}
 
-	filename := tmpPath + fileID + ".html"
+	filename := *tmpPath + "/" + fileID + ".html"
 
 	outputFile, err := os.Create(filename)
 	if err != nil {
@@ -84,7 +75,7 @@ func generateHTML(data map[string]string, fileID string) string {
 }
 
 func generatePdf(htmlFileName string, fileID string) {
-	outfile := fmt.Sprintf("%s/%s.pdf", pdfPath, fileID)
+	outfile := fmt.Sprintf("%s/%s.pdf", *pdfPath, fileID)
 	cmd := exec.Command("wkhtmltopdf", htmlFileName, outfile)
 	cmd.Run()
 }
