@@ -76,7 +76,6 @@ func generateHTML(data map[string]string, tempDir, fileID string) string {
 	filename := tempDir + "/" + fileID + ".html"
 
 	outputFile, err := os.Create(filename)
-
 	defer outputFile.Close()
 
 	if err != nil {
